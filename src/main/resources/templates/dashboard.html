@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Alertes</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #ffffff);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        h1 {
+            font-weight: bold;
+            color: #0d6efd;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        #meteo {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        #trafic {
+            color: #2196f3;
+            font-weight: bold;
+        }
+
+        #retard {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .btn {
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        #historique li {
+            background: #f8f9fa;
+            border-left: 5px solid #0d6efd;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container my-4">
+    <h1 class="text-center mb-4">🚨 Tableau de Bord Alertes 🚨</h1>
+
+    <!-- Section des actions -->
+    <div class="mb-4 text-center">
+        <button id="btn-sms-test" class="btn btn-primary me-2">📩 SMS Test</button>
+        <button id="btn-all-alerts" class="btn btn-success me-2">📡 Toutes les alertes</button>
+        <button id="btn-whatsapp" class="btn btn-success" style="background-color:#25D366;border:none;">💬 WhatsApp</button>
+    </div>
+
+    <!-- Section alertes actuelles -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">⚡ Alertes actuelles</div>
+        <div class="card p-3 m-2 shadow-sm">
+            <h5 id="meteo">Météo: --</h5>
+        </div>
+        <div class="card p-3 m-2 shadow-sm">
+            <h5 id="trafic">Trafic: --</h5>
+        </div>
+        <div class="card p-3 m-2 shadow-sm">
+            <h5 id="retard">Retard: --</h5>
+        </div>
+    </div>
+
+    <!-- Section historique -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">📜 Historique des messages</div>
+        <div class="card-body">
+            <ul id="historique" class="list-group">
+                <!-- Les messages envoyés apparaîtront ici -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS + Fetch pour interactions -->
+<script>
+    const driverPhone = '%2B212617244534';
+
+    async function sendSmsTest() {
+        const response = await fetch(`/alerts/test-alert?driver=${driverPhone}`, { method: 'POST' });
+        alert(await response.text());
+        addToHistorique('SMS Test envoyé');
+    }
+
+    async function sendAllAlerts() {
+        const response = await fetch(`/alerts/check-all?phone=${driverPhone}`, { method: 'POST' });
+        alert(await response.text());
+        updateAlertes();
+        addToHistorique('Toutes les alertes envoyées');
+    }
+
+    async function sendWhatsappAlerts() {
+        const response = await fetch(`/alerts/check-all-whatsapp?phone=${driverPhone}`, { method: 'POST' });
+        alert(await response.text());
+        addToHistorique('Alertes envoyées via WhatsApp');
+    }
+
+    async function updateAlertes() {
+        // Ajout d’un état de chargement
+        document.getElementById('meteo').innerText = "Météo: Chargement...";
+        document.getElementById('trafic').innerText = "Trafic: Chargement...";
+        document.getElementById('retard').innerText = "Retard: Chargement...";
+
+        try {
+            const meteoResp = await fetch(`/alerts/weather-alert?driver=${driverPhone}`, { method: 'POST' });
+            document.getElementById('meteo').innerText = 'Météo: ' + await meteoResp.text();
+
+            const traficResp = await fetch(`/alerts/traffic-alert?driver=${driverPhone}`, { method: 'POST' });
+            document.getElementById('trafic').innerText = 'Trafic: ' + await traficResp.text();
+
+            const retardResp = await fetch(`/alerts/delay-alert?driver=${driverPhone}`, { method: 'POST' });
+            document.getElementById('retard').innerText = 'Retard: ' + await retardResp.text();
+        } catch (e) {
+            console.error("Erreur lors de la récupération des alertes", e);
+        }
+    }
+
+    window.onload = () => {
+        updateAlertes(); // juste l’affichage
+        setInterval(updateAlertes, 120000); // toutes les 2 minutes
+    };
+
+    function addToHistorique(msg) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = `${new Date().toLocaleTimeString()} - ${msg}`;
+        document.getElementById('historique').prepend(li);
+    }
+
+    document.getElementById('btn-sms-test').addEventListener('click', sendSmsTest);
+    document.getElementById('btn-all-alerts').addEventListener('click', sendAllAlerts);
+    document.getElementById('btn-whatsapp').addEventListener('click', sendWhatsappAlerts);
+</script>
+</body>
+</html>
