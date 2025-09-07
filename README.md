@@ -96,8 +96,8 @@ Les alertes peuvent être affichées sur un **dashboard web** et envoyées par *
 ### 1️ Cloner le projet
 
 ```bash
-git clone https://github.com/ton-profil/nom-du-repo.git
-cd nom-du-repo
+git clone https://github.com/naouals/Notification-Service_Spring-Boot.git
+cd Notification-Service_Spring-Boot
 ```
 
 ### 2️ Configurer les clés API
